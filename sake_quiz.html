@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>SAKE検定 練習問題</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 800px; margin: auto; }
+    .question { margin-bottom: 1.5rem; }
+    .options div { margin: 0.5rem 0; }
+    .btn { padding: 0.5rem 1rem; margin-top: 1rem; }
+    .explanation { background: #f0f0f0; padding: 0.5rem; margin-top: 0.5rem; border-left: 4px solid #888; }
+    @media (max-width: 600px) {
+      body { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>SAKE検定 練習問題</h1>
+  <div id="quiz-container"></div>
+  <button class="btn" onclick="nextSection()" id="next-btn">次の5問へ</button>
+  <div id="result" class="hidden"></div>
+
+  <script>
+    const quizData = [{"question": "日本酒の主な原料ではないものはどれ？", "options": ["米", "麹", "酵母", "ぶどう"], "answer": 3, "explanation": "日本酒の主な原料は米、麹、酵母、水です。ぶどうはワインの原料で、日本酒には使われません。"}, {"question": "吟醸酒と名乗るには、精米歩合は何％以下である必要がある？", "options": ["80％", "70％", "60％", "50％"], "answer": 2, "explanation": "吟醸酒は精米歩合60％以下、かつ吟醸造りで製造された酒に限ります。米の外側を削ることで雑味を減らし、華やかな香りが引き立ちます。"}, {"question": "麹の主な役割は何か？", "options": ["アルコールを蒸発させる", "デンプンを糖に分解する", "米の色を白くする", "酸味を強くする"], "answer": 1, "explanation": "麹は米のデンプンを糖に分解する働きがあります。糖に分解された成分が酵母によってアルコールに変えられ、日本酒ができます。"}, {"question": "次のうち、日本酒の保存方法として適していないものはどれ？", "options": ["直射日光を避ける", "冷暗所に置く", "開封後すぐに飲みきる", "高温で熟成させる"], "answer": 3, "explanation": "日本酒は高温に弱く、光や空気に触れると劣化が進みます。常温・高温での熟成は基本的に行わず、冷暗所での保管が推奨されます。"}, {"question": "山廃仕込みとは何の製造工程に関わる言葉？", "options": ["香りづけ", "味の分類", "酵母の種類", "酒母の製法"], "answer": 3, "explanation": "山廃（やまはい）仕込みは、酒母の製法のひとつ。自然の乳酸菌の力を借りる昔ながらの方法で、手間と時間がかかりますが、力強い味わいの酒になります。"}, {"question": "特定名称酒ではないものはどれ？", "options": ["本醸造酒", "純米酒", "大吟醸酒", "普通酒"], "answer": 3, "explanation": "普通酒は特定名称酒に分類されない一般的な日本酒です。特定名称酒は、一定の基準を満たす品質の日本酒を指します。"}, {"question": "酒米の特徴として正しいのはどれ？", "options": ["小粒で硬い", "タンパク質が多い", "心白がある", "安価である"], "answer": 2, "explanation": "酒米には「心白（しんぱく）」という白くて不透明な中心部があり、麹菌が入り込みやすくなっています。これが良質な日本酒造りに適しています。"}, {"question": "アルコール発酵に必要な微生物は？", "options": ["乳酸菌", "納豆菌", "酵母", "カビ"], "answer": 2, "explanation": "酵母は糖を分解してアルコールと二酸化炭素を発生させる微生物で、日本酒の発酵に不可欠です。"}, {"question": "冷やして飲む日本酒の名称として適しているものは？", "options": ["燗酒", "冷酒", "常温酒", "湯煎酒"], "answer": 1, "explanation": "冷酒は冷やして飲む日本酒のことです。反対に燗酒は温めて飲む酒を指します。"}, {"question": "日本酒と相性がよい料理として最も一般的なのは？", "options": ["チーズフォンデュ", "寿司", "トマトパスタ", "カレーライス"], "answer": 1, "explanation": "日本酒は米由来の旨味があるため、魚介系や和食、特に寿司との相性が非常に良いとされています。"}];
+    let currentSection = 0;
+    const sectionSize = 5;
+    let userAnswers = [];
+
+    function renderSection() {
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
+      const start = currentSection * sectionSize;
+      const end = Math.min(start + sectionSize, quizData.length);
+
+      for (let i = start; i < end; i++) {
+        const q = quizData[i];
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.innerHTML = `<strong>問${i + 1}: ${q.question}</strong>`;
+        const opts = document.createElement('div');
+        opts.className = 'options';
+
+        q.options.forEach((opt, idx) => {
+          const id = `q${i}_opt${idx}`;
+          opts.innerHTML += `
+            <div><input type="radio" name="q${i}" id="${id}" value="${idx}">
+            <label for="${id}">${opt}</label></div>`;
+        });
+
+        const exp = document.createElement('div');
+        exp.id = `exp${i}`;
+        div.appendChild(opts);
+        div.appendChild(exp);
+        container.appendChild(div);
+      }
+    }
+
+    function nextSection() {
+      saveAnswers();
+      showExplanations();
+      currentSection++;
+      if (currentSection * sectionSize >= quizData.length) {
+        showResults();
+      } else {
+        setTimeout(() => {
+          renderSection();
+        }, 1000);
+      }
+    }
+
+    function saveAnswers() {
+      const start = currentSection * sectionSize;
+      const end = Math.min(start + sectionSize, quizData.length);
+      for (let i = start; i < end; i++) {
+        const radios = document.getElementsByName(`q${i}`);
+        let selected = -1;
+        radios.forEach(r => { if (r.checked) selected = parseInt(r.value); });
+        userAnswers[i] = selected;
+      }
+    }
+
+    function showExplanations() {
+      const start = currentSection * sectionSize;
+      const end = Math.min(start + sectionSize, quizData.length);
+      for (let i = start; i < end; i++) {
+        const expDiv = document.getElementById(`exp${i}`);
+        const correct = quizData[i].answer;
+        const user = userAnswers[i];
+        const resultText = (user === correct) ? '✅ 正解' : `❌ 不正解（正解: ${quizData[i].options[correct]}）`;
+        expDiv.innerHTML = `<div class='explanation'><strong>${resultText}</strong><br>${quizData[i].explanation}</div>`;
+      }
+    }
+
+    function showResults() {
+      document.getElementById('quiz-container').innerHTML = '';
+      document.getElementById('next-btn').style.display = 'none';
+      let score = 0;
+      quizData.forEach((q, i) => {
+        if (userAnswers[i] === q.answer) score++;
+      });
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = `<h2>結果</h2><p>正解数：${score} / ${quizData.length}</p>`;
+    }
+
+    renderSection();
+  </script>
+</body>
+</html>
